@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thiệp Mời Lễ Chia Tay Hoạt Họa - Farewell Motion Invitation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400;1,600&display=swap"
+        rel="stylesheet">
+    <!-- Thư viện tạo pháo hoa -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --primary-accent: #1D3557;
+            /* Xanh Navy đại dương */
+            --deep-accent: #0D1B2A;
+            /* Đêm sâu thẳm */
+            --gold-main: #C5A059;
+            /* Vàng kim sang trọng */
+            --gold-light: #F7E9C8;
+            /* Ánh vàng sáng */
+            --gold-glow: rgba(197, 160, 89, 0.45);
+            --text-dark: #242220;
+            /* Màu chữ trầm ấm */
+            --text-muted: #6E645D;
+            /* Màu chữ phụ */
+            --paper-bg: #FCFAF5;
+            /* Giấy mỹ thuật */
+            --envelope-bg: #1B2B3E;
+            /* Vỏ phong bì */
+            --envelope-flap: #142232;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #0E1622;
+            background: radial-gradient(circle at center, #1B2838 0%, #0A1017 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 10px;
+            font-family: 'Lora', serif;
+            color: var(--text-dark);
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* CANVAS HẠT BỤI VÀNG & LÁ RƠI */
+        #particleCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* KHUNG CHỨA SÂN KHẤU 3D */
+        .stage-wrapper {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 440px;
+            perspective: 1200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* PHONG BÌ (ENVELOPE) CHUYỂN ĐỘNG MỞ 3D */
+        .envelope-container {
+            width: 380px;
+            height: 250px;
+            max-width: 92vw;
+            position: relative;
+            background: var(--envelope-bg);
+            border-radius: 12px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(197, 160, 89, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease;
+            margin: 20px 0;
+            overflow: visible;
+        }
+
+        .envelope-container:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6), 0 0 25px var(--gold-glow);
+        }
+
+        /* Nắp phong bì tam giác */
+        .envelope-flap-top {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            clip-path: polygon(0 0, 50% 55%, 100% 0);
+            background: var(--envelope-flap);
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            z-index: 3;
+            transform-origin: top;
+            transition: transform 0.8s ease;
+            border-bottom: 1px solid rgba(197, 160, 89, 0.4);
+        }
+
+        /* Dấu sáp niêm phong (Wax Seal) */
+        .wax-seal {
+            position: absolute;
+            top: 48%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 68px;
+            height: 68px;
+            background: radial-gradient(circle, #E6B566 0%, #A87D2E 80%, #785215 100%);
+            border-radius: 50%;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.6), inset 0 -2px 4px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #382403;
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 11px;
+            text-align: center;
+            z-index: 5;
+            cursor: pointer;
+            animation: pulseGlow 2.5s infinite ease-in-out;
+        }
+
+        .wax-seal svg {
+            width: 22px;
+            height: 22px;
+            fill: #382403;
+            margin-bottom: 2px;
+        }
+
+        @keyframes pulseGlow {
+
+            0%,
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+            }
+
+            50% {
+                transform: translate(-50%, -50%) scale(1.06);
+                box-shadow: 0 8px 30px var(--gold-glow);
+            }
+        }
+
+        .envelope-hint {
+            position: absolute;
+            bottom: 22px;
+            color: var(--gold-light);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 11px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            animation: bounceUpDown 1.8s infinite ease-in-out;
+            z-index: 4;
+        }
+
+        @keyframes bounceUpDown {
+
+            0%,
+            100% {
+                transform: translateY(0);
+                opacity: 0.75;
+            }
+
+            50% {
+                transform: translateY(-4px);
+                opacity: 1;
+            }
+        }
+
+        /* KHUNG THIỆP MỜI HOẠT HỌA CHUẨN 3:4 (420px x 560px) */
+        .card-container {
+            width: 420px;
+            height: 560px;
+            max-width: 95vw;
+            max-height: calc(95vw * (560 / 420));
+            position: relative;
+            transform-style: preserve-3d;
+            transition: all 0.9s cubic-bezier(0.25, 1, 0.5, 1);
+            opacity: 0;
+            transform: translateY(80px) scale(0.85);
+            display: none;
+        }
+
+        .card-container.opened {
+            display: block;
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            animation: cardEntrance 1s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+        }
+
+        @keyframes cardEntrance {
+            0% {
+                opacity: 0;
+                transform: translateY(60px) scale(0.9) rotateX(15deg);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1) rotateX(0deg);
+            }
+        }
+
+        .farewell-card {
+            width: 100%;
+            height: 100%;
+            background: var(--paper-bg);
+            border-radius: 6px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(197, 160, 89, 0.45);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 34px 24px 28px 24px;
+            text-align: center;
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        /* Vệt sáng lướt qua thiệp (Metallic Shimmer Effect) */
+        .farewell-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg,
+                    transparent 45%,
+                    rgba(255, 255, 255, 0.25) 50%,
+                    transparent 55%);
+            transform: rotate(-30deg);
+            pointer-events: none;
+            animation: lightShimmer 6s infinite ease-in-out;
+            z-index: 10;
+        }
+
+        @keyframes lightShimmer {
+            0% {
+                transform: translateY(-120%) rotate(-30deg);
+                opacity: 0;
+            }
+
+            20% {
+                opacity: 0.8;
+            }
+
+            40% {
+                transform: translateY(120%) rotate(-30deg);
+                opacity: 0;
+            }
+
+            100% {
+                transform: translateY(120%) rotate(-30deg);
+                opacity: 0;
+            }
+        }
+
+        /* Vân giấy vải lanh */
+        .farewell-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            opacity: 0.35;
+            background-image:
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(110, 80, 50, 0.03) 2px, rgba(110, 80, 50, 0.03) 4px),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(110, 80, 50, 0.03) 2px, rgba(110, 80, 50, 0.03) 4px);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Khung viền kim loại đôi */
+        .inner-border {
+            position: absolute;
+            inset: 12px;
+            border: 1px solid rgba(197, 160, 89, 0.55);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .inner-border::after {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            border: 0.5px dashed rgba(197, 160, 89, 0.4);
+        }
+
+        /* 4 góc hoa văn hoàng gia */
+        .corner {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            border-color: var(--gold-main);
+            z-index: 3;
+        }
+
+        .corner.tl {
+            top: 8px;
+            left: 8px;
+            border-top: 1.5px solid var(--gold-main);
+            border-left: 1.5px solid var(--gold-main);
+        }
+
+        .corner.tr {
+            top: 8px;
+            right: 8px;
+            border-top: 1.5px solid var(--gold-main);
+            border-right: 1.5px solid var(--gold-main);
+        }
+
+        .corner.bl {
+            bottom: 8px;
+            left: 8px;
+            border-bottom: 1.5px solid var(--gold-main);
+            border-left: 1.5px solid var(--gold-main);
+        }
+
+        .corner.br {
+            bottom: 8px;
+            right: 8px;
+            border-bottom: 1.5px solid var(--gold-main);
+            border-right: 1.5px solid var(--gold-main);
+        }
+
+        /* SVG CÀNH LÁ ĐUNG ĐƯA CHUYỂN ĐỘNG */
+        .svg-foliage-layer {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .sway-branch-left {
+            transform-origin: 0% 0%;
+            animation: swayBranch 4.5s ease-in-out infinite alternate;
+        }
+
+        .sway-branch-right {
+            transform-origin: 100% 0%;
+            animation: swayBranch 5.2s ease-in-out infinite alternate-reverse;
+        }
+
+        .sway-bottom-left {
+            transform-origin: 0% 100%;
+            animation: swayBranch 4.8s ease-in-out infinite alternate-reverse;
+        }
+
+        .sway-bottom-right {
+            transform-origin: 100% 100%;
+            animation: swayBranch 5s ease-in-out infinite alternate;
+        }
+
+        @keyframes swayBranch {
+            0% {
+                transform: rotate(0deg) scale(1);
+            }
+
+            50% {
+                transform: rotate(2deg) scale(1.02);
+            }
+
+            100% {
+                transform: rotate(-2.5deg) scale(0.99);
+            }
+        }
+
+        /* NỘI DUNG THIỆP & ANIMATION CHỮ TỪNG TẦNG */
+        .card-content-body {
+            position: relative;
+            z-index: 4;
+            height: 100%;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .anim-fade-up {
+            opacity: 0;
+            transform: translateY(15px);
+            animation: fadeUpStagger 0.7s cubic-bezier(0.2, 0.8, 0.4, 1) forwards;
+        }
+
+        .opened .anim-1 {
+            animation-delay: 0.2s;
+        }
+
+        .opened .anim-2 {
+            animation-delay: 0.4s;
+        }
+
+        .opened .anim-3 {
+            animation-delay: 0.6s;
+        }
+
+        .opened .anim-4 {
+            animation-delay: 0.8s;
+        }
+
+        .opened .anim-5 {
+            animation-delay: 1.0s;
+        }
+
+        @keyframes fadeUpStagger {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 1. Header & Huy hiệu */
+        .badge-crest {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--primary-accent), var(--deep-accent));
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), inset 0 0 0 1px var(--gold-main);
+            color: var(--gold-light);
+            margin-bottom: 3px;
+            animation: rotateGently 12s infinite linear;
+        }
+
+        @keyframes rotateGently {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .intro-tag {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 8.5px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .ceremony-heading {
+            font-family: 'Playfair Display', 'Cormorant Garamond', serif;
+            font-size: 27px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--primary-accent);
+            line-height: 1.1;
+            margin-top: 2px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .script-sub {
+            font-family: 'Alex Brush', cursive;
+            font-size: 21px;
+            color: var(--gold-main);
+            margin-top: -2px;
+        }
+
+        /* 2. Nhân vật chính */
+        .character-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            margin: 4px 0;
+        }
+
+        .person-name {
+            font-family: 'Playfair Display', 'Cormorant Garamond', serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary-accent);
+            letter-spacing: 0.5px;
+            line-height: 1.15;
+        }
+
+        .divider-spark {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 2px 0;
+        }
+
+        .divider-spark .line {
+            width: 45px;
+            height: 0.8px;
+            background: linear-gradient(90deg, transparent, var(--gold-main), transparent);
+        }
+
+        .divider-spark .sparkle {
+            color: var(--gold-main);
+            font-size: 12px;
+            animation: sparklePulse 2s infinite ease-in-out;
+        }
+
+        @keyframes sparklePulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+
+            50% {
+                transform: scale(1.3);
+                opacity: 1;
+                filter: drop-shadow(0 0 4px var(--gold-main));
+            }
+        }
+
+        .org-name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--deep-accent);
+            letter-spacing: 0.5px;
+        }
+
+        /* 3. Lời mời */
+        .quote-passage {
+            font-size: 11px;
+            font-style: italic;
+            color: var(--text-muted);
+            line-height: 1.45;
+            max-width: 325px;
+        }
+
+        /* 4. Khung thời gian */
+        .time-highlight-box {
+            background: rgba(240, 235, 224, 0.65);
+            border-top: 1px solid rgba(197, 160, 89, 0.45);
+            border-bottom: 1px solid rgba(197, 160, 89, 0.45);
+            padding: 9px 16px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .time-val {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-accent);
+            line-height: 1;
+        }
+
+        .date-val {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-dark);
+            letter-spacing: 0.3px;
+        }
+
+        .lunar-val {
+            font-size: 10px;
+            font-style: italic;
+            color: var(--text-muted);
+        }
+
+        /* 5. Địa điểm */
+        .venue-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            margin-bottom: 4px;
+        }
+
+        .venue-tag {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 8.5px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--gold-main);
+        }
+
+        .venue-name {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .venue-desc {
+            font-size: 10.5px;
+            color: var(--text-muted);
+            line-height: 1.35;
+            max-width: 330px;
+        }
+
+        @media print {
+            body {
+                background: none;
+                padding: 0;
+            }
+
+            .envelope-container {
+                display: none !important;
+            }
+
+            .card-container {
+                display: block !important;
+                opacity: 1 !important;
+                transform: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- CANVAS HẠT BỤI VÀNG & LÁ RƠI CHUYỂN ĐỘNG -->
+    <canvas id="particleCanvas"></canvas>
+
+    <!-- KHUNG CHỨA SÂN KHẤU CHUYỂN ĐỘNG -->
+    <div class="stage-wrapper">
+
+        <!-- 1. PHONG BÌ 3D TƯƠNG TÁC (BẤM ĐỂ MỞ THIỆP) -->
+        <div class="envelope-container" id="envelopeBox" onclick="openFarewellEnvelope()">
+            <div class="envelope-flap-top" id="envelopeFlap"></div>
+            <div class="wax-seal">
+                <svg viewBox="0 0 24 24">
+                    <path
+                        d="M12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2Z" />
+                </svg>
+                <span>CHẠM MỞ</span>
+            </div>
+            <div class="envelope-hint">✨ Chạm vào dấu sáp để mở thiệp ✨</div>
+        </div>
+
+        <!-- 2. THIỆP MỜI HOẠT HỌA 3D & PARALLAX -->
+        <div class="card-container" id="cardContainer">
+            <div class="farewell-card" id="farewellCard">
+                <!-- Viền kép kim loại & Góc hoàng gia -->
+                <div class="inner-border"></div>
+                <div class="corner tl"></div>
+                <div class="corner tr"></div>
+                <div class="corner bl"></div>
+                <div class="corner br"></div>
+
+                <!-- CÀNH LÁ SVG ĐUNG ĐƯA CHUYỂN ĐỘNG -->
+                <svg class="svg-foliage-layer" viewBox="0 0 420 560" preserveAspectRatio="xMidYMid slice">
+                    <defs>
+                        <radialGradient id="leafGrad" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stop-color="#93AB9B" stop-opacity="0.85" />
+                            <stop offset="70%" stop-color="#557560" stop-opacity="0.65" />
+                            <stop offset="100%" stop-color="#2D4636" stop-opacity="0.4" />
+                        </radialGradient>
+                        <radialGradient id="goldDustGrad" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stop-color="#F3D39B" stop-opacity="0.9" />
+                            <stop offset="70%" stop-color="#C5A059" stop-opacity="0.65" />
+                            <stop offset="100%" stop-color="#8F6A24" stop-opacity="0.3" />
+                        </radialGradient>
+                    </defs>
+
+                    <!-- Nhánh lá góc trên trái đung đưa -->
+                    <g class="sway-branch-left" opacity="0.8" transform="translate(-6, -6)">
+                        <ellipse cx="45" cy="45" rx="20" ry="14" fill="url(#leafGrad)" transform="rotate(-30 45 45)" />
+                        <ellipse cx="65" cy="35" rx="16" ry="12" fill="#A3BAA9" opacity="0.85"
+                            transform="rotate(10 65 35)" />
+                        <ellipse cx="32" cy="62" rx="18" ry="11" fill="url(#goldDustGrad)" opacity="0.75"
+                            transform="rotate(-50 32 62)" />
+                        <circle cx="48" cy="48" r="4" fill="#C5A059" />
+                        <path d="M 28 75 Q 16 95 24 115" stroke="#7E9684" stroke-width="1.6" fill="none"
+                            stroke-linecap="round" />
+                    </g>
+
+                    <!-- Nhánh lá góc trên phải đung đưa -->
+                    <g class="sway-branch-right" opacity="0.8" transform="translate(6, -6)">
+                        <ellipse cx="375" cy="45" rx="20" ry="14" fill="url(#goldDustGrad)"
+                            transform="rotate(30 375 45)" />
+                        <ellipse cx="355" cy="35" rx="16" ry="12" fill="#A3BAA9" opacity="0.85"
+                            transform="rotate(-10 355 35)" />
+                        <ellipse cx="388" cy="62" rx="18" ry="11" fill="url(#leafGrad)" opacity="0.75"
+                            transform="rotate(50 388 62)" />
+                        <circle cx="372" cy="48" r="4" fill="#C5A059" />
+                        <path d="M 392 75 Q 404 95 396 115" stroke="#7E9684" stroke-width="1.6" fill="none"
+                            stroke-linecap="round" />
+                    </g>
+
+                    <!-- Nhánh lá góc dưới trái -->
+                    <g class="sway-bottom-left" opacity="0.8" transform="translate(-6, 10)">
+                        <ellipse cx="45" cy="510" rx="20" ry="14" fill="url(#goldDustGrad)"
+                            transform="rotate(-25 45 510)" />
+                        <ellipse cx="65" cy="522" rx="16" ry="11" fill="#7E9684" opacity="0.75"
+                            transform="rotate(20 65 522)" />
+                        <circle cx="46" cy="512" r="4" fill="#C5A059" />
+                        <path d="M 35 485 Q 22 460 30 435" stroke="#7E9684" stroke-width="1.5" fill="none"
+                            stroke-linecap="round" />
+                    </g>
+
+                    <!-- Nhánh lá góc dưới phải -->
+                    <g class="sway-bottom-right" opacity="0.8" transform="translate(6, 10)">
+                        <ellipse cx="375" cy="510" rx="20" ry="14" fill="url(#leafGrad)"
+                            transform="rotate(25 375 510)" />
+                        <ellipse cx="355" cy="522" rx="16" ry="11" fill="url(#goldDustGrad)" opacity="0.75"
+                            transform="rotate(-20 355 522)" />
+                        <circle cx="374" cy="512" r="4" fill="#C5A059" />
+                        <path d="M 385 485 Q 398 460 390 435" stroke="#7E9684" stroke-width="1.5" fill="none"
+                            stroke-linecap="round" />
+                    </g>
+                </svg>
+
+                <!-- BỐ CỤC NỘI DUNG TỪNG TẦNG ANIMATION -->
+                <div class="card-content-body">
+                    <!-- 1. Header -->
+                    <div class="header-block anim-fade-up anim-1">
+                        <div class="badge-crest">
+                            <svg style="width:18px;height:18px;fill:currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2Z" />
+                            </svg>
+                        </div>
+                        <span class="intro-tag">Trân Trọng Kính Mời</span>
+                        <h1 class="ceremony-heading">Lễ Chia Tay</h1>
+                        <span class="script-sub">Kỷ niệm một chặng đường</span>
+                    </div>
+
+                    <!-- 2. Nhân Vật Chính -->
+                    <div class="character-block anim-fade-up anim-2">
+                        <h2 class="person-name">Đoàn Nguyễn Sơn Hải</h2>
+
+                        <div class="divider-spark">
+                            <div class="line"></div>
+                            <span class="sparkle">✦</span>
+                            <div class="line"></div>
+                        </div>
+
+                        <h3 class="org-name">Trường ĐH Bách Khoa - ĐHĐN</h3>
+                    </div>
+
+                    <!-- 3. Lời Mời Hoài Niệm -->
+                    <p class="quote-passage anim-fade-up anim-3">
+                        "Thanh xuân có hạn, nhưng kỷ niệm là mãi mãi.<br />
+                        Mời gia đình và bạn bè thân thiết đến dự buổi lễ tốt nghiệp, <br />
+                        cùng sẻ chia và lưu giữ những khoảnh khắc đẹp nhất."
+                    </p>
+
+                    <!-- 4. Khung Giờ & Ngày Tháng -->
+                    <div class="time-highlight-box anim-fade-up anim-4">
+                        <span class="time-val">13:00</span>
+                        <p class="date-val">Thứ Bảy, Ngày 29 Tháng 08 Năm 2026</p>
+                    </div>
+
+                    <!-- 5. Địa Điểm -->
+                    <div class="venue-block anim-fade-up anim-5">
+                        <span class="venue-tag">Địa Điểm </span>
+                        <p class="venue-name">Hội Trường Khu F Trường ĐH Bách Khoa - ĐHĐN</p>
+                        <p class="venue-desc">
+                            54 Nguyễn Lương Bằng, P. Hòa Khánh Bắc, Q. Liên Chiểu, TP. Đà Nẵng
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ================= 1. CANVAS PARTICLE SYSTEM (HẠT BỤI VÀNG & LÁ RƠI) =================
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height - height;
+                this.size = Math.random() * 3 + 1;
+                this.speedY = Math.random() * 0.8 + 0.3;
+                this.speedX = Math.random() * 0.6 - 0.3;
+                this.opacity = Math.random() * 0.6 + 0.2;
+                this.isLeaf = Math.random() > 0.7;
+                this.rotation = Math.random() * 360;
+                this.rotSpeed = (Math.random() - 0.5) * 1.5;
+            }
+            update() {
+                this.y += this.speedY;
+                this.x += Math.sin(this.y * 0.01) * 0.5 + this.speedX;
+                this.rotation += this.rotSpeed;
+                if (this.y > height) {
+                    this.reset();
+                    this.y = -10;
+                }
+            }
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate((this.rotation * Math.PI) / 180);
+                if (this.isLeaf) {
+                    ctx.fillStyle = `rgba(180, 205, 185, ${this.opacity * 0.6})`;
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, this.size * 2, this.size, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    ctx.fillStyle = `rgba(247, 233, 200, ${this.opacity})`;
+                    ctx.shadowBlur = 6;
+                    ctx.shadowColor = "rgba(197, 160, 89, 0.8)";
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+        }
+
+        const particles = Array.from({ length: 45 }, () => new Particle());
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, width, height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+        // ================= 2. HIỆU ỨNG MỞ PHONG BÌ 3D & PHÁO HOA =================
+        function openFarewellEnvelope() {
+            const envelope = document.getElementById('envelopeBox');
+            const flap = document.getElementById('envelopeFlap');
+            const cardContainer = document.getElementById('cardContainer');
+
+            // Lật nắp phong bì
+            flap.style.transform = 'rotateX(180deg)';
+
+            // Bắn pháo hoa giấy chúc mừng & kỷ niệm
+            confetti({
+                particleCount: 70,
+                spread: 60,
+                origin: { y: 0.6 },
+                colors: ['#C5A059', '#F7E9C8', '#1D3557', '#FFFFFF']
+            });
+
+            // Tự động phát giai điệu piano êm ái khi mở thiệp
+            startSynthesizedMusic();
+
+            setTimeout(() => {
+                envelope.style.display = 'none';
+                cardContainer.classList.add('opened');
+
+                // Bắn thêm đợt pháo hoa nhẹ nhàng hai bên
+                setTimeout(() => {
+                    confetti({ particleCount: 40, angle: 60, spread: 55, origin: { x: 0 } });
+                    confetti({ particleCount: 40, angle: 120, spread: 55, origin: { x: 1 } });
+                }, 400);
+            }, 600);
+        }
+
+        // ================= 3. 3D MOUSE PARALLAX TILT TRÊN THIỆP =================
+        const cardElem = document.getElementById('cardContainer');
+        window.addEventListener('mousemove', (e) => {
+            if (!cardElem.classList.contains('opened')) return;
+            const xAxis = (window.innerWidth / 2 - e.pageX) / 35;
+            const yAxis = (window.innerHeight / 2 - e.pageY) / 35;
+            cardElem.style.transform = `rotateY(${xAxis}deg) rotateX(${-yAxis}deg)`;
+        });
+
+        // ================= 4. NHẠC NỀN SYNTHESIZER (LOFI PIANO ACOUSTIC CHILL) =================
+        let isPlayingMusic = false;
+        let audioCtx = null;
+        let musicTimer = null;
+
+        const melodyNotes = [
+            261.63, 329.63, 392.00, 523.25, // C4, E4, G4, C5
+            293.66, 349.23, 440.00, 587.33, // D4, F4, A4, D5
+            220.00, 261.63, 329.63, 440.00, // A3, C4, E4, A4
+            196.00, 246.94, 293.66, 392.00  // G3, B3, D4, G4
+        ];
+        let noteIndex = 0;
+
+        function playSoftTone(freq) {
+            if (!audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+                gain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.08, audioCtx.currentTime + 0.08);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1.2);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start();
+                osc.stop(audioCtx.currentTime + 1.25);
+            } catch (e) {
+                console.log(e);
+            }
+        }
+
+        function startSynthesizedMusic() {
+            if (isPlayingMusic) return;
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            isPlayingMusic = true;
+
+            musicTimer = setInterval(() => {
+                const note = melodyNotes[noteIndex % melodyNotes.length];
+                playSoftTone(note);
+                if (noteIndex % 4 === 0) {
+                    playSoftTone(note * 0.5);
+                }
+                noteIndex++;
+            }, 600);
+        }
+    </script>
+</body>
+
+</html>
